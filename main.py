@@ -8,10 +8,14 @@ if not cap.isOpened():
     print('Camera not Working..')
     exit()
     
-l_skin = np.array([0, 20, 70], dtype=np.uint8)
-u_skin = np.array([20, 255, 2550], dtype=np.uint8)
+l_skin = np.array([0, 20, 70]).astype(np.uint8)
+u_skin = np.array([20, 255, 2550]).astype(np.uint8)
 
 mp_hands = mp.solutions.hands.Hands()
+g_result = None
+
+gesture_history = []
+gesture_threshold = 30
 
 while True:
 
@@ -25,9 +29,35 @@ while True:
 
     results = mp_hands.process(rgb_frame)
 
+    if g_result != results.multi_hand_landmarks: 
+        print(g_result)
+        g_result = results
+
+
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
+            #print(hand_landmarks)
+            joints = []
             mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp.solutions.hands.HAND_CONNECTIONS)
+
+            for landmark in hand_landmarks.landmark:
+                joint_x, joint_y, joint_z = landmark.x, landmark.y, landmark.z
+                joints.append((joint_x, joint_y, joint_z))
+
+            
+
+            fingers_up = sum(joint[1] < joints[8][1] for joint in joints[5:8]) <= 2
+
+            if fingers_up:
+                gesture = 'Open hand'
+            else:
+                gesture = 'Closed hand'
+
+            gesture_history.append(gesture)
+
+            cv2.putText(frame, gesture, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+
 
     #hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
