@@ -1,8 +1,15 @@
 import cv2
 import numpy as np
 import mediapipe as mp
+import pyautogui
+import pygetwindow as gw
 
 cap = cv2.VideoCapture(0)
+
+width, height = pyautogui.size()
+#s_width, s_height = gw.Size()
+
+pyautogui.FAILSAFE = False
 
 if not cap.isOpened():
     print('Camera not Working..')
@@ -39,6 +46,16 @@ while True:
             #print(hand_landmarks)
             joints = []
             mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp.solutions.hands.HAND_CONNECTIONS)
+
+            mid_finger_pos = hand_landmarks.landmark[8]
+            mid_finger_x, mid_finger_y = int(mid_finger_pos.x * width), int(mid_finger_pos.y * height)
+
+            movement_scale = 1
+
+            #pyautogui.moveTo(mid_finger_x * movement_scale, mid_finger_y * movement_scale)
+            app_window = gw.getActiveWindow()
+            app_window.moveTo(width-(mid_finger_x * movement_scale), mid_finger_y * movement_scale)
+
 
             for landmark in hand_landmarks.landmark:
                 joint_x, joint_y, joint_z = landmark.x, landmark.y, landmark.z
